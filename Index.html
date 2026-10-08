@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Witthaya Arsasuk · Daily Activity Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
+:root{--nav:#101828;--nav2:#1d2939;--blue:#2563eb;--card:#fff;--line:#e5eaf1;--muted:#667085;--green:#067647;--red:#b42318}
+.app{display:flex;min-height:100vh}.side{width:252px;background:var(--nav);color:#fff;position:fixed;inset:0 auto 0 0;padding:22px 14px;z-index:5}
+.logo{font-weight:800;font-size:18px;padding:7px 12px 24px}.logo small{display:block;color:#98a2b3;font-weight:500;font-size:11px;margin-top:4px}
+.nav{display:grid;gap:4px}.nav button{border:0;background:transparent;color:#aeb8c8;padding:11px 12px;border-radius:9px;text-align:left;font-size:13px;cursor:pointer}.nav button:hover,.nav button.on{background:var(--nav2);color:#fff}
+.content{margin-left:252px;width:calc(100% - 252px);padding:28px 34px}.view{display:none}.view.active{display:block}
+.header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:22px}.title h1{margin:0;font-size:27px}.title p{margin:5px 0 0;color:var(--muted);font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#fff;color:#172033;border-radius:9px;padding:9px 13px;font-weight:700;cursor:pointer}.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn.danger{color:var(--red)}
+.grid{display:grid;gap:15px}.kpis{grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:16px}.two{grid-template-columns:1fr 1fr}.wide{grid-template-columns:1.25fr .75fr}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:0 2px 7px rgba(16,24,40,.035)}.card h2{font-size:15px;margin:0 0 15px}.label{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em}.value{font-size:27px;font-weight:800;margin-top:7px}.note{font-size:11px;color:var(--muted);margin-top:4px}
+.chart{height:270px}.chart.small{height:230px}.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:13px}.input,.select{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 11px;color:#172033;min-height:38px}.search{min-width:280px}
+.table{overflow:auto;border:1px solid var(--line);border-radius:11px}table{width:100%;border-collapse:collapse;min-width:1050px}th,td{padding:11px 12px;border-bottom:1px solid var(--line);font-size:12px;text-align:left;vertical-align:top}th{font-size:10px;color:var(--muted);background:#f8fafc;text-transform:uppercase;position:sticky;top:0}tr:hover td{background:#fafcff}.badge{display:inline-block;background:#edf3ff;color:#2457c5;border-radius:99px;padding:4px 7px;font-size:10px;font-weight:800}.muted{color:var(--muted)}.activity{max-width:550px;white-space:pre-line;line-height:1.45}
+.timeline{display:grid;gap:9px;max-height:570px;overflow:auto}.day{display:grid;grid-template-columns:78px 1fr auto;gap:12px;border:1px solid var(--line);border-radius:11px;padding:12px;cursor:pointer}.day:hover{background:#f8fbff}.daydate{font-weight:800}.daydesc{font-size:12px;color:var(--muted);margin-top:4px;white-space:pre-line}.hrs{font-weight:800;white-space:nowrap}
+.stats{display:grid;gap:8px}.statrow{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:12px}.statrow:last-child{border-bottom:0}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.dow{font-size:10px;color:var(--muted);font-weight:800;text-align:center;padding:5px}.calcell{min-height:82px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px;cursor:pointer}.calcell:hover{border-color:#9bb8ff}.calcell.mutedcell{background:#f8fafc;color:#b0b8c5}.num{font-weight:800;font-size:12px}.calhours{font-size:10px;color:var(--blue);font-weight:800;margin-top:7px}.calbadge{font-size:9px;color:var(--muted)}
+.modal{position:fixed;inset:0;background:rgba(16,24,40,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}.modal.show{display:flex}.modalbox{background:#fff;width:min(760px,100%);max-height:90vh;overflow:auto;border-radius:16px;padding:22px}.modalhead{display:flex;justify-content:space-between;gap:15px}.close{border:0;background:#f2f4f7;border-radius:8px;padding:7px 10px;cursor:pointer}.detailgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.detail{background:#f8fafc;border-radius:10px;padding:11px}.detail b{display:block;font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase}.detail span{font-size:13px;font-weight:700}.empty{text-align:center;padding:28px;color:var(--muted)}
+.footer{text-align:center;color:#98a2b3;font-size:10px;padding:25px}
+@media(max-width:1050px){.kpis{grid-template-columns:repeat(3,1fr)}.two,.wide{grid-template-columns:1fr}}
+@media(max-width:720px){.side{position:static;width:100%;height:auto}.app{display:block}.content{margin:0;width:100%;padding:17px}.header{display:block}.actions{margin-top:12px}.kpis{grid-template-columns:repeat(2,1fr)}.search{min-width:100%}.detailgrid{grid-template-columns:1fr 1fr}.calendar{gap:3px}.calcell{min-height:65px;padding:5px}}
+@media print{.side,.actions,.toolbar{display:none!important}.content{margin:0;width:100%;padding:0}.view{display:none!important}.view.active{display:block}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side"><div class="logo">Daily Activity<small>Witthaya Arsasuk · Project Work Dashboard</small></div>
+<nav class="nav">
+<button class="on" data-view="dashboard">◈ Dashboard</button>
+<button data-view="activities">☷ Daily Activities</button>
+<button data-view="projects">⌂ Projects / Sites</button>
+<button data-view="analysis">◌ Monthly Analysis</button>
+<button data-view="ot">↗ OT Tracking</button>
+<button data-view="calendar">▦ Calendar</button>
+<button data-view="reports">▤ Reports</button>
+</nav></aside>
+<main class="content">
+
+<section id="dashboard" class="view active">
+<div class="header"><div class="title"><h1>Daily Activity Report</h1><p>Witthaya Arsasuk · September 2026</p></div></div>
+<div class="grid kpis">
+<div class="card"><div class="label">Work Days</div><div class="value" id="kDays">—</div><div class="note">Recorded activity days</div></div>
+<div class="card"><div class="label">Total Hours</div><div class="value" id="kHours">—</div><div class="note">Time spent</div></div>
+<div class="card"><div class="label">Average / Day</div><div class="value" id="kAvg">—</div><div class="note">Recorded hours</div></div>
+<div class="card"><div class="label">Project Hours</div><div class="value" id="kProject">—</div><div class="note">Job Type P</div></div>
+<div class="card"><div class="label">OT Hours</div><div class="value" id="kOT">—</div><div class="note">Recorded OT</div></div>
+</div>
+<div class="grid two">
+<div class="card"><h2>Hours by Job Type</h2><div class="chart"><canvas id="typeChart"></canvas></div></div>
+<div class="card"><h2>Daily Workload</h2><div class="chart"><canvas id="dailyChart"></canvas></div></div>
+</div>
+</section>
+
+<section id="activities" class="view">
+<div class="header"><div class="title"><h1>Daily Activities</h1><p>Search, filter and open any activity for details.</p></div><div class="actions"><button class="btn primary" onclick="openAdd()">+ Add Activity</button></div></div>
+<div class="card">
+<div class="toolbar"><input id="q" class="input search" placeholder="Search job code, activity, project..." oninput="renderActivities()">
+<select id="type" class="select" onchange="renderActivities()"><option value="">All Job Types</option></select>
+<input id="date" class="input" type="date" onchange="renderActivities()"><button class="btn" onclick="resetFilters()">Reset</button></div>
+<div id="timeline" class="timeline"></div>
+</div>
+<div class="card" style="margin-top:15px"><h2>All Activity Records</h2><div class="table"><table><thead><tr><th>No.</th><th>Job Code</th><th>Date</th><th>Type</th><th>Activity</th><th>Start</th><th>Stop</th><th>Hours</th><th>Available</th><th>OT</th><th></th></tr></thead><tbody id="tbody"></tbody></table></div></div>
+</section>
+
+<section id="projects" class="view">
+<div class="header"><div class="title"><h1>Projects / Sites</h1><p>Work distribution detected from your actual activity data.</p></div></div>
+<div class="grid two"><div class="card"><h2>Hours by Project / Site</h2><div class="chart"><canvas id="siteChart"></canvas></div></div><div class="card"><h2>Site Summary</h2><div id="siteSummary" class="stats"></div></div></div>
+</section>
+
+<section id="analysis" class="view">
+<div class="header"><div class="title"><h1>Monthly Analysis</h1><p>Understand workload and work-type distribution.</p></div></div>
+<div class="grid two"><div class="card"><h2>Hours by Job Type</h2><div class="chart"><canvas id="analysisTypeChart"></canvas></div></div><div class="card"><h2>Monthly Summary</h2><div id="monthlySummary" class="stats"></div></div></div>
+</section>
+
+<section id="ot" class="view">
+<div class="header"><div class="title"><h1>OT Tracking</h1><p>Overtime records from the Excel report.</p></div></div>
+<div class="grid two"><div class="card"><h2>OT by Date</h2><div class="chart"><canvas id="otChart"></canvas></div></div><div class="card"><h2>OT Summary</h2><div id="otSummary" class="stats"></div></div></div>
+</section>
+
+<section id="calendar" class="view">
+<div class="header"><div class="title"><h1>Calendar</h1><p>Click a working day to view its activities.</p></div><div class="actions"><button class="btn" onclick="changeMonth(-1)">‹</button><button class="btn" onclick="goTodayMonth()">Today</button><button class="btn" onclick="changeMonth(1)">›</button></div></div>
+<div class="card"><h2 id="calTitle"></h2><div id="calendarGrid" class="calendar"></div></div>
+</section>
+
+<section id="reports" class="view">
+<div class="header"><div class="title"><h1>Reports</h1><p>Prepare a clean printable monthly work report.</p></div></div>
+<div class="card"><h2>Executive Summary</h2><p id="exec" style="line-height:1.7;color:#475467"></p></div>
+<div class="grid two" style="margin-top:15px"><div class="card"><h2>Work Type Summary</h2><div id="reportTypes" class="stats"></div></div><div class="card"><h2>Project / Site Summary</h2><div id="reportSites" class="stats"></div></div></div>
+</section>
+
+<div class="footer">Daily Activity Dashboard · Witthaya Arsasuk · Source: Activity Report Excel</div>
+</main></div>
+
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div class="modalbox">
+<div class="modalhead"><div><h2 id="modalTitle" style="margin:0">Activity Details</h2><p id="modalSub" class="muted" style="margin:4px 0 0;font-size:12px"></p></div><button class="close" onclick="closeModal()">✕</button></div>
+<div id="detailGrid" class="detailgrid"></div><div><h3 style="font-size:13px">Work Description</h3><div id="modalDesc" style="white-space:pre-line;line-height:1.6;color:#475467"></div></div>
+<div id="editActions" style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px"></div>
+</div></div>
+
+<script>
+const DATA=[{"No.": 1, "Job Code": "D261", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้ทบทวนแบบ Google Project และจัดทำรายงานประจำวันส่ง Ricoh จากนั้นช่วงบ่ายได้หารือรายละเอียดโครงการ AstraZeneca ร่วมกับผู้รับเหมา รวมถึงประสานงานนัดหมายประชุมกับ GC โครงการ CHN1A เพื่อหารือเกี่ยวกับ Google Project", "Date": "2026-09-01", "Time": "08:00", "Stop": "16:30", "Job Type": "D", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 2, "Job Code": "P261", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้ประสานงานรายละเอียดโครงการ AstraZeneca และ Google ร่วมกับผู้รับเหมา จากนั้นช่วงบ่ายได้ประสานงานกับ CHN1A และ CHW1A เรื่องการเตรียมจัดส่งเจ้าหน้าที่จอด้านความปลอดภัย (Safety Officer) เข้าปฏิบัติงาน พร้อมถ่ายและอัปโหลดภาพความก้าวหน้าของไซต์ CHN1A ODC และ gPOR ลงโฟลเดอร์โครงการ", "Date": "2026-09-02", "Time": "08:00", "Stop": "16:30", "Job Type": "P", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 3, "Job Code": "P262", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้ถ่ายภาพความก้าวหน้าของไซต์ CHW1A ODC และ gPOR จากนั้นช่วงบ่ายได้อัปโหลดภาพ อัปเดตรายงานความก้าวหน้าโดยรวมของทั้งสองไซต์ และหารือเกี่ยวกับแผนการดำเนินงานของโครงการ Google", "Date": "2026-09-03", "Time": "08:00", "Stop": "16:30", "Job Type": "P", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 4, "Job Code": "M261", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้เข้าร่วมประชุมกับ GC ของไซต์ CHN1A_ODC จากนั้นช่วงบ่ายได้หารือแผนงานและประสานงานกับผู้รับเหมา (DMS) เกี่ยวกับโครงการ Google พร้อมเข้าร่วมประชุมอัปเดตประจำสัปดาห์กับ Ricoh และอัปเดตความก้าวหน้าของไซต์โครงการ Google ให้กับ NTT", "Date": "2026-09-04", "Time": "08:00", "Stop": "16:30", "Job Type": "M", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 5, "Job Code": "M262", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้เข้าร่วมประชุมประจำสัปดาห์กับ GMAS และทบทวนรายละเอียดข้อมูลของโครงการ Google จากนั้นช่วงบ่ายได้ประสานงานกับไซต์ CHN1A เรื่องการย้ายอุปกรณ์ AV พร้อมประสานงานกับ DMS เกี่ยวกับการส่งมอบอุปกรณ์ AVเพิ่มเติม และจัดเตรียมช่างเทคนิคให้พร้อมสำหรับเข้าปฏิบัติงาน", "Date": "2026-09-07", "Time": "08:00", "Stop": "16:30", "Job Type": "M", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 6, "Job Code": "P263", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้สำรวจพื้นที่และหารือรายละเอียดพร้อมข้อกำหนดร่วมกับทีม GC ที่ไซต์ CHN1A รวมถึงถ่ายภาพความก้าวหน้าของไซต์ CHN1A ODC และ gPOR จากนั้นช่วงบ่ายได้เข้าร่วมประชุม Town Hall หารือเกี่ยวกับโครงการ Google ในไซต์ CHN1A ต่อเนื่องจากการสำรวจพื้นที่ และอัปโหลดภาพความก้าวหน้าประจำวันของทั้งสองไซต์", "Date": "2026-09-08", "Time": "08:00", "Stop": "16:30", "Job Type": "P", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 7, "Job Code": "P264", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้สำรวจพื้นที่และหารือรายละเอียดพร้อมข้อกำหนดร่วมกับทีม GC ที่ไซต์ CHW1A รวมถึงถ่ายภาพความก้าวหน้าของไซต์ CHN1A gPOR และ ODC จากนั้นช่วงบ่ายได้หารือแผนการย้ายและจัดเก็บอุปกรณ์ AV ร่วมกับทีมไซต์ CHN1A เข้าร่วมตรวจเช็กการย้ายอุปกรณ์ของ Stecon ในห้องเก็บอุปกรณ์ AV พร้อมทั้งจัดสรรและขนย้ายอุปกรณ์ AV", "Date": "2026-09-09", "Time": "08:00", "Stop": "16:30", "Job Type": "P", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 8, "Job Code": "P265", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้ประสานงานข้อมูลการอบรม T1, T2, T3 และการอบรมความปลอดภัยงานไฟฟ้ากับไซต์ CHW1A และ CHN1A พร้อมอัปโหลดภาพความก้าวหน้าของไซต์ CHW1A_gPOR และ ODC จากนั้นช่วงบ่ายได้อัปเดตสรุปข้อมูลติดตามผลจากการสำรวจพื้นที่ไซต์ CHN1A และ CHW1A ให้ GC ทราบ รวมถึงประสานงานขออนุญาตนำรถเข้าจอดในพื้นที่ไซต์ CHW1A", "Date": "2026-09-10", "Time": "08:00", "Stop": "16:30", "Job Type": "P", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 9, "Job Code": "M263", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้สำรวจพื้นที่และหารือรายละเอียดพร้อมข้อกำหนดร่วมกับทีม GC ที่ไซต์ CHW1A gPOR จากนั้นช่วงบ่ายได้เข้าร่วมประชุมอัปเดตประจำสัปดาห์กับ Ricoh และอัปเดตความก้าวหน้าของไซต์โครงการ Google ให้กับ NTT", "Date": "2026-09-11", "Time": "08:00", "Stop": "16:30", "Job Type": "M", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 10, "Job Code": "D262", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้ประสานงานรับมอบและติดรหัสทรัพย์สิน (Asset Tag) บนอุปกรณ์ AV จากนั้นช่วงบ่ายได้ติดรหัสทรัพย์สินอุปกรณ์ AV ต่อ พร้อมทั้งประสานงานจัดเตรียมการและจัดทำเอกสารประกอบการอบรม T1 T3 สำหรับไซต์ CHN1A", "Date": "2026-09-14", "Time": "08:00", "Stop": "16:30", "Job Type": "D", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 11, "Job Code": "P266", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้สำรวจพื้นที่และหารือรายละเอียดพร้อมข้อกำหนดการทำงานร่วมกับทีม GC ที่ไซต์ CHW1A ODC จากนั้นช่วงบ่ายได้ ขนย้ายอุปกรณ์และวัสดุ ณ สำนักงานไซต์ CHW1A พร้อมประสานงานกับทีม DMS เพื่อจัดสรรสเคดดูลการอบรมความปลอดภัยที่จำเป็นก่อนเริ่มเข้าปฏิบัติงานในไซต์ Google", "Date": "2026-09-15", "Time": "08:00", "Stop": "16:30", "Job Type": "P", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 12, "Job Code": "P267", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้ประสานงานการอบรมความปลอดภัย T1, T2, T3 ร่วมกับทีมความปลอดภัยของไซต์ CHN1A พร้อมประสานงานแผนการดำเนินโครงการกับ DMS จากนั้นช่วงบ่ายได้หารือรายละเอียดเกี่ยวกับโครงการ Google และส่งสรุปข้อมูลจากการสำรวจพื้นที่ (Site Walk) รวมถึงรายการประเด็นที่ต้องแก้ไขให้ GC รับทราบ", "Date": "2026-09-16", "Time": "08:00", "Stop": "16:30", "Job Type": "P", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 13, "Job Code": "D263", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้หารือข้อกำหนดพื้นที่ร่วมกับ GC Designer ของไซต์ CHW1A ODC รวมถึงทบทวนรายการที่ต้องแก้ไข/ปรับปรุงและวางขั้นตอนถัดไปร่วมกับ Project Manager ของไซต์ CHW1A ODC จากนั้นช่วงบ่ายได้จัดทำแผนการดำเนินงานโครงการ Google และหารือรายละเอียดโครงการร่วมกับผู้รับเหมา DMS", "Date": "2026-09-17", "Time": "08:00", "Stop": "16:30", "Job Type": "D", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 14, "Job Code": "M264", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้ให้คำปรึกษาและสนับสนุนงานแก่ลูกค้า MSD จากนั้นช่วงบ่ายได้เข้าร่วมประชุมวางแผนการดำเนินงานโครงการ Google", "Date": "2026-09-18", "Time": "08:00", "Stop": "16:30", "Job Type": "M", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 15, "Job Code": "P268", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้เข้าร่วมการอบรมความปลอดภัยสำหรับการปฏิบัติงานในพื้นที่ที่มีกระแสไฟฟ้า (Energized Areas) จากนั้นช่วงบ่ายได้เข้าร่วมการอบรม Tier 1 และ Tier 2", "Date": "2026-09-21", "Time": "08:00", "Stop": "16:30", "Job Type": "P", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 16, "Job Code": "P269", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้ถ่ายภาพความก้าวหน้าของไซต์ CHW1A ODC และ gPOR จากนั้นช่วงบ่ายได้ถ่ายภาพความก้าวหน้าของไซต์ CHN1A ODC และ gPOR ต่อ พร้อมประสานงานข้อกำหนดการอบรมเพื่อเข้าพื้นที่ของแต่ละไซต์ วางแผนขั้นตอนดำเนินงานโครงการ Google และหารือรายละเอียดโครงการร่วมกับ DMS", "Date": "2026-09-22", "Time": "08:00", "Stop": "16:30", "Job Type": "P", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 17, "Job Code": "P2610", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้อัปโหลดภาพความก้าวหน้าของไซต์ CHN1A_gPOR, ODC, CHW1A_gPOR และ ODC พร้อมหารือรายละเอียดและการดำเนินงานโครงการ Google ร่วมกับ DMS จากนั้นช่วงบ่ายได้ประสานงานข้อกำหนดการอบรมเข้าพื้นที่ของทุกไซต์ ตรวจสอบความพร้อมอุปกรณ์ AV ก่อนติดตั้ง วางแผนขั้นตอนดำเนินงาน และหารือติดตามผลโครงการ Google ร่วมกับ DMS ต่อเนื่อง", "Date": "2026-09-23", "Time": "08:00", "Stop": "16:30", "Job Type": "P", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 18, "Job Code": "P2611", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้เข้าร่วมการอบรม Tier 1, Tier 2 และ Tier 3 สำหรับไซต์ CHW1A จากนั้นช่วงบ่ายได้ทำแบบทดสอบการอบรม Tier 1, Tier 2 และ Tier 3 ของไซต์ CHW1A เรียบร้อย พร้อมประสานงานกับผู้รับเหมา DMS เรื่องเอกสารที่จำเป็นสำหรับการสมัครอบรม และเข้าร่วมประชุมวางแผนการดำเนินงานโครงการ Google", "Date": "2026-09-24", "Time": "08:00", "Stop": "16:30", "Job Type": "P", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 19, "Job Code": "D264", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้ประสานงานกับผู้รับเหมา DMS เรื่องเอกสารที่จำเป็นสำหรับการสมัครอบรม จากนั้นช่วงบ่ายได้หารือรายละเอียดและแผนการดำเนินงานโครงการ Google ยื่นส่งเอกสารการอบรมให้ทีม Safety ตรวจสอบสำหรับไซต์ CHN1A และ CHW1A พร้อมเข้าร่วมประชุมรับฟังข้อมูลอัปเดตเกี่ยวกับ Ricoh", "Date": "2026-09-25", "Time": "08:00", "Stop": "16:30", "Job Type": "D", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 20, "Job Code": "D265", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้ประสานงานเรื่องการจอดรถสำหรับไซต์ CHN1A พร้อมติดตามเอกสารการอบรมช่างเทคนิคที่เหลือกับ DMS จากนั้นช่วงบ่ายได้คัดแยกและจัดหมวดหมู่อุปกรณ์ AV เพื่อเตรียมพร้อมสำหรับการติดตั้งในแต่ละห้อง", "Date": "2026-09-28", "Time": "08:00", "Stop": "16:30", "Job Type": "D", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 21, "Job Code": "P2612", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้หารือแผนการทำงานโครงการ Google และประสานงานกับ GC เรื่องการย้ายอุปกรณ์ AV เข้าพื้นที่ จากนั้นช่วงบ่ายได้ประสานงานกับ GC เรื่องการย้ายอุปกรณ์ AV ต่อเนื่อง พร้อมหารือแผนการดำเนินงานกับ DMS", "Date": "2026-09-29", "Time": "08:00", "Stop": "16:30", "Job Type": "P", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}, {"No.": 22, "Job Code": "P2613", "Job Name": "คัดแยกอุปกรณ์ AV ตามรายห้อง ติดตั้งอุปกรณ์ลงตู้แร็คของโครงการ และดำเนินการตั้งค่าระบบ CTL OS", "Date": "2026-09-29", "Time": "16:30", "Stop": "23:59", "Job Type": "P", "Time Spent": 7.48, "Available Hour": null, "OT": 6.98, "Project ID": 0}, {"No.": 23, "Job Code": "P2614", "Job Name": "ปฏิบัติงานที่ไซต์งาน Google โดยช่วงเช้าได้ประสานงานและนำผู้รับเหมา DMS เข้าร่วมการอบรมพนักงานใหม่ที่ไซต์ CHW1A พร้อมจัดทำรายการอุปกรณ์สำหรับขนย้ายเข้าพื้นที่ จากนั้นช่วงบ่ายได้ขนย้ายอุปกรณ์ AV เข้าพื้นที่ไซต์งาน และเข้าร่วมประชุมวางแผนโครงการร่วมกับผู้รับเหมา DMS", "Date": "2026-09-30", "Time": "08:00", "Stop": "16:30", "Job Type": "P", "Time Spent": 8.5, "Available Hour": 7.5, "OT": null, "Project ID": 0}];
+const TYPE_NAMES={P:"Project",R:"Reporting",D:"Documentation",L:"Learning",M:"Meeting",T:"Traveling"};
+let rows=[...DATA], typeChart,dailyChart,siteChart,analysisTypeChart,otChart,calDate=new Date(2026,8,1);
+
+const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\n/g,"<br>");
+const hrs=r=>Number(r["Time Spent"])||0;
+const fmt=n=>(Number(n)||0).toFixed(1);
+function go(view){document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));document.getElementById(view).classList.add("active");document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("on",x.dataset.view===view));if(view==="projects")renderProjects();if(view==="analysis")renderAnalysis();if(view==="ot")renderOT();if(view==="calendar")renderCalendar();if(view==="reports")renderReports();}
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>go(b.dataset.view));
+function total(){return rows.reduce((s,r)=>s+hrs(r),0)}
+function workDays(){return new Set(rows.map(r=>r.Date).filter(Boolean)).size}
+function init(){
+ const types=[...new Set(rows.map(r=>r["Job Type"]).filter(Boolean))].sort();const sel=document.getElementById("type");
+ types.forEach(t=>sel.insertAdjacentHTML("beforeend",`<option value="${t}">${t} · ${TYPE_NAMES[t]||t}</option>`));
+ updateKPI();buildDashboardCharts();renderActivities();
+}
+function updateKPI(){
+ const t=total(),d=workDays(),p=rows.filter(r=>r["Job Type"]==="P").reduce((s,r)=>s+hrs(r),0),ot=rows.reduce((s,r)=>s+(Number(r.OT)||0),0);
+ kDays.textContent=d;kHours.textContent=fmt(t)+" h";kAvg.textContent=fmt(t/d)+" h";kProject.textContent=fmt(p)+" h";kOT.textContent=fmt(ot)+" h";
+}
+function byType(){const m={};rows.forEach(r=>m[r["Job Type"]]=(m[r["Job Type"]]||0)+hrs(r));return Object.entries(m).sort((a,b)=>b[1]-a[1])}
+function byDate(){const m={};rows.forEach(r=>m[r.Date]=(m[r.Date]||0)+hrs(r));return Object.entries(m).sort()}
+function detectedSites(){const m={};rows.forEach(r=>{let txt=(r["Job Name"]||"")+" "+(r["Project ID"]||"");let ms=txt.match(/CHN1A(?:[-_ ]?(?:ODC|gPOR))?|CHW1A(?:[-_ ]?(?:ODC|gPOR))?|CEVA|AstraZeneca|Google Site/gi)||[];[...new Set(ms.map(x=>x.replace(/_/g,"-")))].forEach(x=>m[x]=(m[x]||0)+hrs(r))});return Object.entries(m).sort((a,b)=>b[1]-a[1])}
+function chartDestroy(c){if(c)c.destroy()}
+function buildDashboardCharts(){
+ chartDestroy(typeChart);chartDestroy(dailyChart);
+ const bt=byType(),bd=byDate();
+ typeChart=new Chart(document.getElementById("typeChart"),{type:"doughnut",data:{labels:bt.map(x=>x[0]+" · "+(TYPE_NAMES[x[0]]||x[0])),datasets:[{data:bt.map(x=>x[1])}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom"}}}});
+ dailyChart=new Chart(document.getElementById("dailyChart"),{type:"bar",data:{labels:bd.map(x=>x[0].slice(5)),datasets:[{label:"Hours",data:bd.map(x=>x[1])}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+}
+function renderActivities(){
+ const q=(document.getElementById("q").value||"").toLowerCase(),t=document.getElementById("type").value,d=document.getElementById("date").value;
+ const a=rows.filter(r=>(!t||r["Job Type"]===t)&&(!d||r.Date===d)&&(!q||Object.values(r).join(" ").toLowerCase().includes(q)));
+ document.getElementById("timeline").innerHTML=a.length?a.map((r,i)=>`<div class="day" onclick="openDetails(${rows.indexOf(r)})"><div class="daydate">${r.Date?.slice(8,10)||"—"}<br><span class="muted">${r.Date?.slice(0,7)||""}</span></div><div><b><span class="badge">${r["Job Type"]||"—"}</span> ${esc(r["Job Code"])}</b><div class="daydesc">${esc(r["Job Name"])}</div></div><div class="hrs">${fmt(hrs(r))} h</div></div>`).join(""):'<div class="empty">No activities match the selected filters.</div>';
+ document.getElementById("tbody").innerHTML=a.map(r=>`<tr><td>${esc(r["No."])}</td><td><b>${esc(r["Job Code"])}</b></td><td>${r.Date||"—"}</td><td><span class="badge">${esc(r["Job Type"])}</span></td><td class="activity">${esc(r["Job Name"])}</td><td>${r.Time||"—"}</td><td>${r.Stop||"—"}</td><td><b>${fmt(hrs(r))}</b></td><td>${r["Available Hour"]==null?"—":fmt(r["Available Hour"])}</td><td>${fmt(r.OT)}</td><td><button class="btn" onclick="openDetails(${rows.indexOf(r)})">View</button></td></tr>`).join("");
+}
+function resetFilters(){q.value="";type.value="";date.value="";renderActivities()}
+function openDetails(i){
+ const r=rows[i];if(!r)return;
+ modalTitle.textContent="Activity Details";modalSub.textContent=(r.Date||"")+" · "+(r["Job Code"]||"");
+ detailGrid.innerHTML=[["Date",r.Date],["Job Code",r["Job Code"]],["Job Type",(r["Job Type"]||"")+" · "+(TYPE_NAMES[r["Job Type"]]||"")],["Start",r.Time],["Stop",r.Stop],["Time Spent",fmt(hrs(r))+" h"],["Available Hour",r["Available Hour"]==null?"—":fmt(r["Available Hour"])+" h"],["OT",fmt(r.OT)+" h"],["Project ID",r["Project ID"]]].map(x=>`<div class="detail"><b>${x[0]}</b><span>${esc(x[1]??"—")}</span></div>`).join("");
+ modalDesc.innerHTML=esc(r["Job Name"]||"—");editActions.innerHTML=`<button class="btn" onclick="openEdit(${i})">Edit</button><button class="btn danger" onclick="deleteActivity(${i})">Delete</button>`;modal.classList.add("show");
+}
+function closeModal(){modal.classList.remove("show")}
+function openAdd(){openForm(-1)}
+function openEdit(i){openForm(i)}
+function openForm(i){
+ const r=i>=0?rows[i]:{}; modalTitle.textContent=i>=0?"Edit Activity":"Add Activity";modalSub.textContent="Update the activity record";
+ const fields=[["Date","date","Date"],["Job Code","text","Job Code"],["Job Type","text","Job Type"],["Time","time","Start"],["Stop","time","Stop"],["Time Spent","number","Time Spent"],["Available Hour","number","Available Hour"],["OT","number","OT"],["Project ID","text","Project ID"],["Job Name","textarea","Job Name"]];
+ detailGrid.innerHTML=fields.map(([key,type,label])=>`<div class="detail" style="${type==="textarea"?"grid-column:1/-1":""}"><b>${label}</b>${type==="textarea"?`<textarea id="f_${key}" style="width:100%;min-height:110px;border:1px solid #e5eaf1;border-radius:8px;padding:9px">${esc(r[key]||"")}</textarea>`:`<input id="f_${key}" type="${type}" value="${String(r[key]??"").replace(/"/g,"&quot;")}" style="width:100%;border:1px solid #e5eaf1;border-radius:8px;padding:8px">`}</div>`).join("");
+ editActions.innerHTML=`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveForm(${i})">Save</button>`;modal.classList.add("show");
+}
+function saveForm(i){
+ const get=k=>document.getElementById("f_"+k)?.value||"";
+ const r={"No.":i>=0?rows[i]["No."]:(rows.length+1),"Job Code":get("Job Code"),"Job Name":get("Job Name"),"Date":get("Date"),"Time":get("Time"),"Stop":get("Stop"),"Job Type":get("Job Type"),"Time Spent":Number(get("Time Spent"))||0,"Available Hour":Number(get("Available Hour"))||0,"OT":Number(get("OT"))||0,"Project ID":get("Project ID")};
+ if(i>=0)rows[i]=r;else rows.push(r);
+ closeModal();updateKPI();buildDashboardCharts();renderActivities();
+}
+function deleteActivity(i){if(confirm("Delete this activity?")){rows.splice(i,1);closeModal();updateKPI();buildDashboardCharts();renderActivities()}}
+function projectData(){return detectedSites()}
+function renderProjects(){
+ const s=projectData();chartDestroy(siteChart);siteChart=new Chart(document.getElementById("siteChart"),{type:"bar",data:{labels:s.map(x=>x[0]),datasets:[{label:"Hours",data:s.map(x=>x[1])}]},options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+ siteSummary.innerHTML=s.length?s.map(x=>`<div class="statrow"><span>${esc(x[0])}</span><b>${fmt(x[1])} h</b></div>`).join(""):'<div class="empty">No site keywords detected.</div>';
+}
+function renderAnalysis(){
+ const bt=byType();chartDestroy(analysisTypeChart);analysisTypeChart=new Chart(document.getElementById("analysisTypeChart"),{type:"doughnut",data:{labels:bt.map(x=>x[0]+" · "+(TYPE_NAMES[x[0]]||x[0])),datasets:[{data:bt.map(x=>x[1])}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom"}}}});
+ monthlySummary.innerHTML=[["Total records",rows.length],["Work days",workDays()],["Total hours",fmt(total())+" h"],["Average / day",fmt(total()/workDays())+" h"],["Most time",bt[0]?bt[0][0]+" · "+(TYPE_NAMES[bt[0][0]]||bt[0][0]):"—"]].map(x=>`<div class="statrow"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");
+}
+function renderOT(){
+ const m={};rows.forEach(r=>{const v=Number(r.OT)||0;if(v)m[r.Date]=(m[r.Date]||0)+v});const d=Object.entries(m).sort();
+ chartDestroy(otChart);otChart=new Chart(document.getElementById("otChart"),{type:"bar",data:{labels:d.map(x=>x[0]),datasets:[{label:"OT Hours",data:d.map(x=>x[1])}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+ const totalOT=rows.reduce((s,r)=>s+(Number(r.OT)||0),0);otSummary.innerHTML=[["Total OT hours",fmt(totalOT)+" h"],["OT days",d.length],["Latest OT date",d.length?d[d.length-1][0]:"—"]].map(x=>`<div class="statrow"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");
+}
+function renderCalendar(){
+ const y=calDate.getFullYear(),m=calDate.getMonth();calTitle.textContent=calDate.toLocaleString("en-US",{month:"long",year:"numeric"});
+ const first=new Date(y,m,1),last=new Date(y,m+1,0),start=first.getDay(),cells=[];["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(x=>cells.push(`<div class="dow">${x}</div>`));
+ for(let i=0;i<start;i++)cells.push('<div class="calcell mutedcell"></div>');
+ for(let day=1;day<=last.getDate();day++){const ds=`${y}-${String(m+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`,a=rows.filter(r=>r.Date===ds),h=a.reduce((s,r)=>s+hrs(r),0);cells.push(`<div class="calcell" onclick="${a.length?`showDate('${ds}')`:''}"><div class="num">${day}</div>${a.length?`<div class="calhours">${fmt(h)} h</div><div class="calbadge">${a.length} activity${a.length>1?"ies":""}</div>`:""}</div>`)}
+ calendarGrid.innerHTML=cells.join("");
+}
+function showDate(ds){go("activities");date.value=ds;renderActivities()}
+function changeMonth(n){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+n,1);renderCalendar()}
+function goTodayMonth(){calDate=new Date();renderCalendar()}
+function renderReports(){
+ const bt=byType(),ss=detectedSites(),d=workDays(),t=total(),ot=rows.reduce((s,r)=>s+(Number(r.OT)||0),0);
+ exec.textContent=`During September 2026, Witthaya Arsasuk recorded ${d} working days and ${fmt(t)} hours of activity. The largest work category was ${bt[0]?((TYPE_NAMES[bt[0][0]]||bt[0][0])+" ("+fmt(bt[0][1])+" h)"):"—"}. Total recorded overtime was ${fmt(ot)} hours. The dashboard summarizes daily activities, work categories and project/site references directly from the Excel report.`;
+ reportTypes.innerHTML=bt.map(x=>`<div class="statrow"><span>${x[0]} · ${TYPE_NAMES[x[0]]||x[0]}</span><b>${fmt(x[1])} h</b></div>`).join("");
+ reportSites.innerHTML=ss.length?ss.map(x=>`<div class="statrow"><span>${esc(x[0])}</span><b>${fmt(x[1])} h</b></div>`).join(""):'<div class="empty">No site references detected.</div>';
+}
+function exportCSV(){
+ const cols=["No.","Job Code","Job Name","Date","Time","Stop","Job Type","Time Spent","Available Hour","OT","Project ID"];
+ const out=[cols.join(","),...rows.map(r=>cols.map(c=>`"${String(r[c]??"").replaceAll('"','""')}"`).join(","))].join("\n");
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([out],{type:"text/csv;charset=utf-8"}));a.download="Witthaya_Daily_Activity_September_2026.csv";a.click();
+}
+function printReport(){go("reports");setTimeout(()=>window.print(),100)}
+init();
+</script></body></html>
